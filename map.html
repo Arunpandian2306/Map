@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nearby Amenities Locator</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 600px;
+            width: 100%;
+        }
+        .amenity-list {
+            margin: 20px 0;
+            font-family: Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <h1>Nearby Amenities Locator</h1>
+    <p>Click on the map to pin a location and fetch nearby amenities.</p>
+    <div id="map"></div>
+    <div class="amenity-list" id="amenity-list"></div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // Initialize the map
+        const map = L.map('map').setView([20.5937, 78.9629], 5); // Centered on India
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Marker for pinned location
+        let pinnedMarker;
+        let amenityMarkers = [];
+
+        // Click event to pin location and fetch amenities
+        map.on('click', function (e) {
+            const { lat, lng } = e.latlng;
+
+            // Remove the previous marker
+            if (pinnedMarker) {
+                map.removeLayer(pinnedMarker);
+            }
+
+            // Clear existing amenity markers
+            amenityMarkers.forEach(marker => map.removeLayer(marker));
+            amenityMarkers = [];
+
+            // Add new marker
+            pinnedMarker = L.marker([lat, lng]).addTo(map).bindPopup('Pinned Location').openPopup();
+
+            // Fetch nearby amenities
+            fetchNearbyAmenities(lat, lng);
+        });
+
+        // Fetch nearby amenities using Overpass API
+        function fetchNearbyAmenities(lat, lng) {
+            const query = `
+                [out:json];
+                 (
+                    node["highway"="bus_stop"](around:5000,${lat},${lng});
+                    node["public_transport"="platform"](around:5000,${lat},${lng});
+                    node["railway"="station"](around:5000,${lat},${lng});
+                    node["aeroway"="aerodrome"](around:5000,${lat},${lng});
+                    node["aeroway"="airport"](around:5000,${lat},${lng});
+                    node["amenity"="hospital"](around:5000,${lat},${lng});
+                    node["amenity"="theater"](around:5000,${lat},${lng});
+                    node["amenity"="fire_station"](around:5000,${lat},${lng});
+                    node["amenity"="firestation"](around:5000,${lat},${lng});
+                    node["amenity"="police"](around:5000,${lat},${lng});
+                    node["amenity"="university"](around:5000,${lat},${lng});
+                    node["amenity"="school"](around:5000,${lat},${lng});
+                    node["shop"="supermarket"](around:5000,${lat},${lng});
+                    node["shop"="mall"](around:5000,${lat},${lng});
+                );
+                out body;
+                `;
+
+
+            fetch('https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(query))
+                .then(response => response.json())
+                .then(data => displayAmenities(data.elements || [], lat, lng))
+                .catch(error => {
+                    console.error('Error fetching amenities:', error);
+                    document.getElementById('amenity-list').innerHTML = '<p>Error fetching amenities. Please try again later.</p>';
+                });
+        }
+
+        // Display amenities on the map and in a list
+        function displayAmenities(amenities, lat, lng) {
+            const amenityListDiv = document.getElementById('amenity-list');
+            amenityListDiv.innerHTML = '<h2>Nearby Amenities</h2>';
+
+            if (amenities.length === 0) {
+                amenityListDiv.innerHTML += '<p>No amenities found nearby.</p>';
+                return;
+            }
+
+            const ul = document.createElement('ul');
+            amenities.forEach(amenity => {
+                const { lat, lon, tags } = amenity;
+                const name = tags.name || 'Unnamed';
+                const type = tags.amenity || tags.highway || tags.railway || tags.aeroway || tags.shop || 'Unknown';
+
+                // Add marker on the map
+                const marker = L.marker([lat, lon]).addTo(map)
+                    .bindPopup(`<strong>${name}</strong><br>Type: ${type}`);
+                amenityMarkers.push(marker);
+
+                // Add to the list
+                const li = document.createElement('li');
+                li.textContent = `${name} (${type})`;
+                ul.appendChild(li);
+            });
+
+            amenityListDiv.appendChild(ul);
+        }
+    </script>
+</body>
+</html>
