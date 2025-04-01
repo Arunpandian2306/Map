@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nearby Amenities Locator</title>
+    <link rel="stylesheet" href="../css/map.css" />
+</head>
+<body>
+    <div class="header">
+        <button class="back-button" onclick="goHome()">← Back</button>
+        <h1>Nearby Amenities Locator</h1>
+    </div>
+
+    <div class="search-bar">
+        <input type="text" id="search-input" placeholder="Enter a city name (e.g., Thirumanagalam)" />
+        <button onclick="searchCity()">Search</button>
+    </div>
+
+    <p>Click on the map to pin a location and fetch nearby amenities.</p>
+    <div class="container">
+        <div class="amenity-list" id="amenity-list"></div>
+        <div id="map"></div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="../js/map.js"></script>
+</body>
+</html>
