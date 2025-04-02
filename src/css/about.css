@@ -1,0 +1,114 @@
+/* General Styling */
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    color: #333;
+    background: url('../../assets/about-bg.jpg') no-repeat center center/cover;
+    text-align: center;
+}
+
+/* Header */
+header {
+    background: #008CBA;
+    color: white;
+    padding: 20px 0;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+/* Section Container */
+.container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Section Titles */
+h2 {
+    color: #007BFF;
+    font-size: 28px;
+    margin-bottom: 15px;
+}
+
+/* Paragraphs */
+p {
+    font-size: 18px;
+    line-height: 1.6;
+    color: #555;
+}
+
+/* Features List */
+.features ul {
+    list-style: none;
+    padding: 0;
+}
+
+.features li {
+    font-size: 18px;
+    padding: 10px;
+    background: #f9f9f9;
+    margin: 5px 0;
+    border-radius: 5px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Contact Section */
+.contact a {
+    color: #007BFF;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.contact a:hover {
+    text-decoration: underline;
+}
+
+/* Footer */
+footer {
+    margin-top: 30px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 15px 0;
+}
+.go-back-btn {
+    display: flex;
+    align-items: center;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    text-decoration: none;
+    margin-bottom: 15px;
+}
+
+.go-back-btn img {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+}
+
+.go-back-btn:hover {
+    background-color: #0056b3;
+}
+.back-button {
+    padding: 10px;
+    background: white;
+    color: #008CBA;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    position: absolute;
+    left: 20px; /* Adjust distance from the left */
+    top: 20px; /* Adjust distance from the top */
+}
+
+
+
