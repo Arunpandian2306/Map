@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us - Nearby Amenities Locator</title>
+    <link rel="stylesheet" href="../css/about.css">
+</head>
+<body>
+    <header>
+        <button class="back-button" onclick="goHome()">← Back</button>
+        <h1>About Us</h1>
+    </header>
+
+    <section class="intro">
+        <div class="container">
+            <h2>Welcome to Nearby Amenities Locator</h2>
+            <p>
+                Our platform is dedicated to helping users find essential amenities such as restaurants, hospitals, petrol stations, and more with ease.
+                Whether you're new to a city or exploring a neighborhood, we provide real-time, accurate information at your fingertips.
+            </p>
+        </div>
+    </section>
+
+    <section class="mission">
+        <div class="container">
+            <h2>Our Mission</h2>
+            <p>
+                Our goal is to simplify the process of discovering nearby facilities, ensuring that people can access important services quickly and efficiently.
+                We leverage advanced geolocation technology to bring you the best results based on your needs.
+            </p>
+        </div>
+    </section>
+
+    <section class="features">
+        <div class="container">
+            <h2>Why Choose Us?</h2>
+            <ul>
+                <li><strong>Real-Time Data:</strong> Get up-to-date information about amenities around you.</li>
+                <li><strong>Easy to Use:</strong> A seamless interface designed for a smooth user experience.</li>
+                <li><strong>Wide Coverage:</strong> Discover amenities in cities, towns, and even remote areas.</li>
+                <li><strong>Accurate Results:</strong> Powered by advanced mapping and AI-driven suggestions.</li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="team">
+        <div class="container">
+            <h2>Meet Our Team</h2>
+            <p>
+                We are a team of passionate developers, designers, and researchers committed to improving location-based services.
+                Our experts work tirelessly to enhance the accuracy and reliability of our platform.
+            </p>
+        </div>
+    </section>
+
+    <section class="contact">
+        <div class="container">
+            <h2>Contact Us</h2>
+            <p>If you have any questions or feedback, feel free to <a href="feedback.html">reach out</a>. We’d love to hear from you!</p>
+        </div>
+    </section>
+
+    <footer>
+        <p>© 2024 Nearby Amenities Locator. All rights reserved.</p>
+    </footer>
+
+    <script>
+        function goHome() {
+            window.location.href = '../../index.html';
+        }
+    </script>
+</body>
+</html>
