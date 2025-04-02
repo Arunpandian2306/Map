@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nearby Amenities Locator</title>
     <link rel="stylesheet" href="../css/map.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 <body>
     <div class="header">
@@ -14,16 +16,25 @@
 
     <div class="search-bar">
         <input type="text" id="search-input" placeholder="Enter a city name (e.g., Thirumanagalam)" />
-        <button onclick="searchCity()">Search</button>
+        <button onclick="searchCity()">🔍 Search</button>
     </div>
 
     <p>Click on the map to pin a location and fetch nearby amenities.</p>
+
     <div class="container">
-        <div class="amenity-list" id="amenity-list"></div>
+        <div class="sidebar">
+            <button class="toggle-sidebar" onclick="toggleSidebar()">📌 Toggle List</button>
+            <div class="amenity-list" id="amenity-list">
+                <p class="placeholder">Click on the map to find nearby amenities.</p>
+            </div>
+        </div>
         <div id="map"></div>
     </div>
 
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <div id="loading" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
     <script src="../js/map.js"></script>
 </body>
 </html>
