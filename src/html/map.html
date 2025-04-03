@@ -10,8 +10,11 @@
 </head>
 <body>
     <div class="header">
-        <button class="back-button" onclick="goHome()">← Back</button>
         <h1>Nearby Amenities Locator</h1>
+        <div class="menu">
+            <button class="btn login-btn" onclick="location.href='about.html'">About Us</button>
+            <button class="btn login-btn" onclick="location.href='feedback.html'">Contact Us</button>
+        </div>
     </div>
 
     <div class="search-bar">
@@ -24,6 +27,11 @@
     <div class="container">
         <div class="sidebar">
             <button class="toggle-sidebar" onclick="toggleSidebar()">📌 Toggle List</button>
+            <div class="category-filter">
+                <select id="category-select" onchange="filterAmenities()">
+                    <option value="all">All Categories</option>
+                </select>
+            </div>
             <div class="amenity-list" id="amenity-list">
                 <p class="placeholder">Click on the map to find nearby amenities.</p>
             </div>

@@ -1,7 +1,3 @@
-function goHome() {
-    window.location.href = '../../index.html';
-}
-
 const map = L.map('map').setView([20.5937, 78.9629], 5);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
@@ -10,6 +6,8 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 let pinnedMarker;
 let userMarker;
 let amenityMarkers = [];
+let allAmenities = [];
+let currentCategory = 'all';
 const geocodeAPI = 'https://nominatim.openstreetmap.org/search';
 
 const emojiIcons = {
@@ -29,7 +27,6 @@ const emojiIcons = {
     default: '📍'
 };
 
-// Get user's current location
 function trackCurrentLocation() {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(position => {
@@ -42,7 +39,7 @@ function trackCurrentLocation() {
 
             const userIcon = L.divIcon({
                 className: 'custom-marker',
-                html: `<div style="font-size: 24px; text-align: center;">📍</div>`,
+                html: '<div style="font-size: 24px; text-align: center;">📍</div>',
                 iconSize: [30, 30],
                 iconAnchor: [15, 30]
             });
@@ -61,7 +58,6 @@ function trackCurrentLocation() {
     }
 }
 
-// Call the function to get the user's current location
 trackCurrentLocation();
 
 function searchCity() {
@@ -85,6 +81,7 @@ function searchCity() {
                 map.removeLayer(pinnedMarker);
             }
             pinnedMarker = L.marker([lat, lon]).addTo(map).bindPopup(`📍 City: ${cityName}`).openPopup();
+            fetchNearbyAmenities(lat, lon);
         })
         .finally(() => {
             document.getElementById("loading").style.display = "none";
@@ -130,39 +127,81 @@ function getDistance(lat1, lon1, lat2, lon2) {
 function displayAmenities(amenities, lat, lng) {
     const list = document.getElementById('amenity-list');
     list.innerHTML = '';
+    allAmenities = amenities;
+    
     if (amenities.length === 0) {
         list.innerHTML = '<h2>No amenities found.</h2>';
         return;
     }
+    
+    const categorySelect = document.getElementById('category-select');
+    categorySelect.innerHTML = '<option value="all">All Categories</option>';
     
     const categorizedAmenities = {};
     amenities.forEach(amenity => {
         const type = amenity.tags.amenity || 'default';
         if (!categorizedAmenities[type]) {
             categorizedAmenities[type] = [];
+            const option = document.createElement('option');
+            option.value = type;
+            option.textContent = `${emojiIcons[type] || emojiIcons.default} ${type.replace('_', ' ').toUpperCase()}`;
+            categorySelect.appendChild(option);
         }
         amenity.distance = getDistance(lat, lng, amenity.lat, amenity.lon);
         categorizedAmenities[type].push(amenity);
     });
 
-    let totalAmenities = amenities.length;
-    list.innerHTML = `<h2>Total Amenities Found: ${totalAmenities}</h2>`;
+    filterAmenities();
+}
+
+function filterAmenities() {
+    const list = document.getElementById('amenity-list');
+    const categorySelect = document.getElementById('category-select');
+    currentCategory = categorySelect.value;
     
-    Object.keys(categorizedAmenities).forEach(category => {
-        categorizedAmenities[category].sort((a, b) => a.distance - b.distance);
+    amenityMarkers.forEach(marker => map.removeLayer(marker));
+    amenityMarkers = [];
+    
+    list.innerHTML = '';
+    
+    if (allAmenities.length === 0) {
+        list.innerHTML = '<h2>No amenities found.</h2>';
+        return;
+    }
+    
+    const categorizedAmenities = {};
+    allAmenities.forEach(amenity => {
+        const type = amenity.tags.amenity || 'default';
+        if (!categorizedAmenities[type]) {
+            categorizedAmenities[type] = [];
+        }
+        categorizedAmenities[type].push(amenity);
     });
 
-    Object.entries(categorizedAmenities).forEach(([type, amenities]) => {
-        const emoji = emojiIcons[type] || emojiIcons.default;
+    let totalAmenities = 0;
+    const categoriesToShow = currentCategory === 'all' 
+        ? Object.keys(categorizedAmenities) 
+        : [currentCategory];
+    
+    categoriesToShow.forEach(category => {
+        totalAmenities += categorizedAmenities[category].length;
+    });
+    
+    list.innerHTML = `<h2>Total Amenities Found: ${totalAmenities}</h2>`;
+    
+    categoriesToShow.forEach(category => {
+        const emoji = emojiIcons[category] || emojiIcons.default;
+        const amenities = categorizedAmenities[category];
+        
         const categoryHeading = document.createElement('h3');
-        categoryHeading.textContent = `${emoji} ${type.replace('_', ' ').toUpperCase()} (${amenities.length})`;
+        categoryHeading.textContent = `${emoji} ${category.replace('_', ' ').toUpperCase()} (${amenities.length})`;
         list.appendChild(categoryHeading);
 
         const ul = document.createElement('ul');
         amenities.forEach(amenity => {
             const name = amenity.tags.name || 'Unnamed';
+            const emoji = emojiIcons[category] || emojiIcons.default;
 
-            // Create a custom marker with an emoji
             const customIcon = L.divIcon({
                 className: 'custom-marker',
                 html: `<div style="font-size: 24px; text-align: center;">${emoji}</div>`,
@@ -171,11 +210,11 @@ function displayAmenities(amenities, lat, lng) {
             });
 
             const marker = L.marker([amenity.lat, amenity.lon], { icon: customIcon }).addTo(map);
-            marker.bindPopup(`${emoji} <b>${name}</b><br>Type: ${type}<br>Distance: ${amenity.distance.toFixed(2)} km`);
+            marker.bindPopup(`${emoji} <b>${name}</b><br>Type: ${category}<br>Distance: ${amenity.distance.toFixed(2)} km`);
             amenityMarkers.push(marker);
 
             const li = document.createElement('li');
-            li.innerHTML = `${emoji} ${name} (${type}) - ${amenity.distance.toFixed(2)} km`;
+            li.innerHTML = `${emoji} ${name} (${category}) - ${amenity.distance.toFixed(2)} km`;
             ul.appendChild(li);
         });
         list.appendChild(ul);
@@ -183,5 +222,11 @@ function displayAmenities(amenities, lat, lng) {
 }
 
 function toggleSidebar() {
-    document.querySelector('.sidebar').classList.toggle('hidden');
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.classList.toggle('collapsed');
+    if (sidebar.classList.contains('collapsed')) {
+        document.querySelector('.toggle-sidebar').textContent = '📌';
+    } else {
+        document.querySelector('.toggle-sidebar').textContent = '📌 Toggle List';
+    }
 }
