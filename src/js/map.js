@@ -18,12 +18,28 @@ const emojiIcons = {
   pharmacy: "💊",
   cafe: "☕",
   restaurant: "🍽️",
+  post_box:"📮",
+  parking_entrance:"🅿️",
+  bus_station:"🚏",
+  theatre:"🎥",
+  place_of_worship:"🛐",
+  atm:"🏧",
+  doctors:"🧑‍⚕️",
+  clinic:"🏨",
   bank: "🏦",
   library: "📚",
   school: "🏫",
   university: "🎓",
   bus_stop: "🚌",
-  railway: "🚆",
+  fuel:"⛽",
+  railway_station: "🚉",
+  subway_entrance: "🚇",
+  airport: "✈️",
+  airline: "🛫",
+  airway: "🛬",
+  aeroway:"🛬",
+  aerodrome:"🛫",
+  aerohub:"🛫",
   default: "📍",
 };
 
@@ -34,13 +50,11 @@ function trackCurrentLocation() {
         const { latitude, longitude } = position.coords;
         map.setView([latitude, longitude], 14);
 
-        if (userMarker) {
-          map.removeLayer(userMarker);
-        }
+        if (userMarker) map.removeLayer(userMarker);
 
         const userIcon = L.divIcon({
           className: "custom-marker",
-          html: '<div style="font-size: 24px; text-align: center;">📍</div>',
+          html: '<div style="font-size: 24px;">📍</div>',
           iconSize: [30, 30],
           iconAnchor: [15, 30],
         });
@@ -52,9 +66,7 @@ function trackCurrentLocation() {
 
         fetchNearbyAmenities(latitude, longitude);
       },
-      () => {
-        alert("Unable to retrieve your location.");
-      }
+      () => alert("Unable to retrieve your location.")
     );
   } else {
     alert("Geolocation is not supported by your browser.");
@@ -65,58 +77,46 @@ trackCurrentLocation();
 
 function searchCity() {
   const cityName = document.getElementById("search-input").value.trim();
-
-  if (!cityName) {
-    alert("Please enter a city name.");
-    return;
-  }
+  if (!cityName) return alert("Please enter a city name.");
 
   document.getElementById("loading").style.display = "flex";
 
   fetch(`${geocodeAPI}?q=${encodeURIComponent(cityName)}&format=json`)
     .then((response) => response.json())
     .then((data) => {
-      if (data.length === 0) {
-        alert("City not found. Please try another name.");
-        return;
-      }
+      if (!data.length) return alert("City not found.");
 
       const { lat, lon } = data[0];
       map.setView([lat, lon], 14);
 
-      if (pinnedMarker) {
-        map.removeLayer(pinnedMarker);
-      }
+      if (pinnedMarker) map.removeLayer(pinnedMarker);
 
       pinnedMarker = L.marker([lat, lon])
         .addTo(map)
         .bindPopup(`📍 City: ${cityName}`)
         .openPopup();
+
       fetchNearbyAmenities(lat, lon);
     })
     .catch((error) => {
       console.error("Error fetching city data:", error);
-      alert("Something went wrong. Please try again.");
+      alert("Something went wrong. Try again.");
     })
     .finally(() => {
       document.getElementById("loading").style.display = "none";
     });
 }
 
-document
-  .getElementById("search-input")
-  .addEventListener("keydown", function (event) {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      searchCity();
-    }
-  });
+document.getElementById("search-input").addEventListener("keydown", function (e) {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    searchCity();
+  }
+});
 
 map.on("click", function (e) {
   const { lat, lng } = e.latlng;
-  if (pinnedMarker) {
-    map.removeLayer(pinnedMarker);
-  }
+  if (pinnedMarker) map.removeLayer(pinnedMarker);
   amenityMarkers.forEach((marker) => map.removeLayer(marker));
   amenityMarkers = [];
   pinnedMarker = L.marker([lat, lng])
@@ -128,17 +128,27 @@ map.on("click", function (e) {
 
 function fetchNearbyAmenities(lat, lng) {
   document.getElementById("loading").style.display = "flex";
-  const query = `[out:json];(node["amenity"](around:5000,${lat},${lng}););out body;`;
 
-  fetch(
-    "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(query)
-  )
+  const query = `
+    [out:json];
+    (
+      node(around:5000,${lat},${lng})[amenity];
+      node(around:5000,${lat},${lng})[railway=station];
+      node(around:5000,${lat},${lng})[railway=subway_entrance];
+      node(around:5000,${lat},${lng})[aeroway=aerodrome];
+      node(around:5000,${lat},${lng})[aeroway=airline];
+      node(around:5000,${lat},${lng})[aeroway=airway];
+    );
+    out body;
+  `;
+
+  fetch("https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(query))
     .then((response) => response.json())
     .then((data) => displayAmenities(data.elements || [], lat, lng))
+    .catch((error) => console.error("Error fetching amenities:", error))
     .finally(() => {
       document.getElementById("loading").style.display = "none";
-    })
-    .catch((error) => console.error("Error fetching amenities:", error));
+    });
 }
 
 function getDistance(lat1, lon1, lat2, lon2) {
@@ -146,13 +156,23 @@ function getDistance(lat1, lon1, lat2, lon2) {
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.sin(dLat / 2) ** 2 +
     Math.cos((lat1 * Math.PI) / 180) *
       Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+      Math.sin(dLon / 2) ** 2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
+}
+
+function categorizeAmenity(tags) {
+  if (tags.amenity) return tags.amenity;
+  if (tags.railway === "station") return "railway_station";
+  if (tags.railway === "subway_entrance") return "subway_entrance";
+  if (tags.aeroway === "aerodrome") return "airport";
+  if (tags.aeroway === "airline") return "airline";
+  if (tags.aeroway === "airway") return "airway";
+  if (tags.airport === "airway") return "airway";
+  return "default";
 }
 
 function displayAmenities(amenities, lat, lng) {
@@ -160,7 +180,7 @@ function displayAmenities(amenities, lat, lng) {
   list.innerHTML = "";
   allAmenities = amenities;
 
-  if (amenities.length === 0) {
+  if (!amenities.length) {
     list.innerHTML = "<h2>No amenities found.</h2>";
     return;
   }
@@ -170,14 +190,12 @@ function displayAmenities(amenities, lat, lng) {
 
   const categorizedAmenities = {};
   amenities.forEach((amenity) => {
-    const type = amenity.tags.amenity || "default";
+    const type = categorizeAmenity(amenity.tags);
     if (!categorizedAmenities[type]) {
       categorizedAmenities[type] = [];
       const option = document.createElement("option");
       option.value = type;
-      option.textContent = `${emojiIcons[type] || emojiIcons.default} ${type
-        .replace("_", " ")
-        .toUpperCase()}`;
+      option.textContent = `${emojiIcons[type] || emojiIcons.default} ${type.replace("_", " ").toUpperCase()}`;
       categorySelect.appendChild(option);
     }
     amenity.distance = getDistance(lat, lng, amenity.lat, amenity.lon);
@@ -194,29 +212,26 @@ function filterAmenities() {
 
   amenityMarkers.forEach((marker) => map.removeLayer(marker));
   amenityMarkers = [];
-
   list.innerHTML = "";
 
-  if (allAmenities.length === 0) {
+  if (!allAmenities.length) {
     list.innerHTML = "<h2>No amenities found.</h2>";
     return;
   }
 
   const categorizedAmenities = {};
   allAmenities.forEach((amenity) => {
-    const type = amenity.tags.amenity || "default";
-    if (!categorizedAmenities[type]) {
-      categorizedAmenities[type] = [];
-    }
+    const type = categorizeAmenity(amenity.tags);
+    if (!categorizedAmenities[type]) categorizedAmenities[type] = [];
     categorizedAmenities[type].push(amenity);
   });
 
-  let totalAmenities = 0;
   const categoriesToShow =
     currentCategory === "all"
       ? Object.keys(categorizedAmenities)
       : [currentCategory];
 
+  let totalAmenities = 0;
   categoriesToShow.forEach((category) => {
     totalAmenities += categorizedAmenities[category].length;
   });
@@ -227,38 +242,29 @@ function filterAmenities() {
     const emoji = emojiIcons[category] || emojiIcons.default;
     const amenities = categorizedAmenities[category];
 
-    const categoryHeading = document.createElement("h3");
-    categoryHeading.textContent = `${emoji} ${category
-      .replace("_", " ")
-      .toUpperCase()} (${amenities.length})`;
-    list.appendChild(categoryHeading);
+    const heading = document.createElement("h3");
+    heading.textContent = `${emoji} ${category.replace("_", " ").toUpperCase()} (${amenities.length})`;
+    list.appendChild(heading);
 
     const ul = document.createElement("ul");
     amenities.forEach((amenity) => {
       const name = amenity.tags.name || "Unnamed";
-      const emoji = emojiIcons[category] || emojiIcons.default;
 
-      const customIcon = L.divIcon({
+      const icon = L.divIcon({
         className: "custom-marker",
-        html: `<div style="font-size: 24px; text-align: center;">${emoji}</div>`,
+        html: `<div style="font-size: 24px;">${emoji}</div>`,
         iconSize: [30, 30],
         iconAnchor: [15, 30],
       });
 
-      const marker = L.marker([amenity.lat, amenity.lon], {
-        icon: customIcon,
-      }).addTo(map);
+      const marker = L.marker([amenity.lat, amenity.lon], { icon }).addTo(map);
       marker.bindPopup(
-        `${emoji} <b>${name}</b><br>Type: ${category}<br>Distance: ${amenity.distance.toFixed(
-          2
-        )} km`
+        `${emoji} <b>${name}</b><br>Type: ${category}<br>Distance: ${amenity.distance.toFixed(2)} km`
       );
       amenityMarkers.push(marker);
 
       const li = document.createElement("li");
-      li.innerHTML = `${emoji} ${name} (${category}) - ${amenity.distance.toFixed(
-        2
-      )} km`;
+      li.innerHTML = `${emoji} ${name} (${category}) - ${amenity.distance.toFixed(2)} km`;
       ul.appendChild(li);
     });
     list.appendChild(ul);
@@ -268,9 +274,6 @@ function filterAmenities() {
 function toggleSidebar() {
   const sidebar = document.querySelector(".sidebar");
   sidebar.classList.toggle("collapsed");
-  if (sidebar.classList.contains("collapsed")) {
-    document.querySelector(".toggle-sidebar").textContent = "📌";
-  } else {
-    document.querySelector(".toggle-sidebar").textContent = "📌 Toggle List";
-  }
+  document.querySelector(".toggle-sidebar").textContent =
+    sidebar.classList.contains("collapsed") ? "📌" : "📌 Toggle List";
 }
